@@ -58,7 +58,8 @@ function txn() {
 
         transaction.sign(keypair)
 
-        await server.submitTransaction(transaction)
+        const response = await server.submitTransaction(transaction)
+        return response
 
     }
 
@@ -66,7 +67,13 @@ function txn() {
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
         getKeyPairFromSecret(accountPassphrase)
         .then((res) => transaction(res)
-            .then(() => console.log(chalk.yellowBright(`Transfer succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}`)))
+            .then((tn) => {
+                if (tn.successful){
+                    console.log(chalk.green(`Transaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+                }else{
+                    console.log(chalk.red('Transaction Failed'))
+                }
+            })
             .catch((e) => { console.error(e); throw e})
         )
         .catch((e) => { console.error(e); throw e})
@@ -74,7 +81,13 @@ function txn() {
         // after getting account passphrase run 
         getKeyPairFromPassphrase(accountPassphrase)
         .then((res) => transaction(res)
-            .then(() => console.log(chalk.yellowBright(`Transfer succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}`)))
+            .then((tn) => {
+                if (tn.successful){
+                    console.log(chalk.green(`Transaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+                }else{
+                    console.log(chalk.red('Transaction Failed'))
+                }
+            })
             .catch((e) => { console.error(e); throw e})
         )
         .catch((e) => { console.error(e); throw e})
