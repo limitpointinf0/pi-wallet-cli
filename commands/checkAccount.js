@@ -2,7 +2,7 @@ const conf = new (require('conf'))()
 const chalk = require('chalk')
 const Stellar = require('stellar-sdk')
 const util = require('util')
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync')({ sigint: true });
 const config = require('../config.json');
 
 function check () {

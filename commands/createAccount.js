@@ -6,7 +6,7 @@ const { TimeoutInfinite } = require('stellar-base');
 const bip39 = require('bip39')
 const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync')({ sigint: true });
 
 function create() {
     //prepare keypairs for new wallet
@@ -61,17 +61,17 @@ function create() {
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
         getKeyPairFromSecret(accountPassphrase)
         .then((res) => transaction(res)
-            .then(() => console.log(chalk.yellowBright(`New Wallet Created! Private Key ${newWallet.secretSeed} Public Key ${newWallet.publicKey}`)))
+            .then(() => console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`)))
             .catch((e) => { console.error(e); throw e})
         )
         .catch((e) => { console.error(e); throw e})
     }else {
         getKeyPairFromPassphrase(accountPassphrase)
-            .then((res) => transaction(res)
-                .then(() => console.log(chalk.yellowBright(`New Wallet Created! Private Key ${newWallet.secretSeed} Public Key ${newWallet.publicKey}`)))
-                .catch((e) => { console.error(e); throw e})
-            )
+        .then((res) => transaction(res)
+            .then(() => console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`)))
             .catch((e) => { console.error(e); throw e})
+        )
+        .catch((e) => { console.error(e); throw e})
     }
 
 }

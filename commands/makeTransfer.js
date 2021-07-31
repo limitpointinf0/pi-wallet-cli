@@ -6,7 +6,7 @@ const { TimeoutInfinite } = require('stellar-base');
 const bip39 = require('bip39')
 const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
-const prompt = require('prompt-sync')();
+const prompt = require('prompt-sync')({ sigint: true });
 
 function txn() {
     //get source account information
@@ -66,18 +66,18 @@ function txn() {
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
         getKeyPairFromSecret(accountPassphrase)
         .then((res) => transaction(res)
-            .then(() => console.log(chalk.yellowBright(`Transfer succeeded! \n Destination: ${destAccountAddress} \n Amt: ${transferAmt} \n Memo: ${transferMemo}`)))
+            .then(() => console.log(chalk.yellowBright(`Transfer succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}`)))
             .catch((e) => { console.error(e); throw e})
         )
         .catch((e) => { console.error(e); throw e})
     }else {
         // after getting account passphrase run 
         getKeyPairFromPassphrase(accountPassphrase)
-            .then((res) => transaction(res)
-                .then(() => console.log(chalk.yellowBright(`Transfer succeeded! \n Destination: ${destAccountAddress} \n Amt: ${transferAmt} \n Memo: ${transferMemo}`)))
-                .catch((e) => { console.error(e); throw e})
-            )
+        .then((res) => transaction(res)
+            .then(() => console.log(chalk.yellowBright(`Transfer succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}`)))
             .catch((e) => { console.error(e); throw e})
+        )
+        .catch((e) => { console.error(e); throw e})
     }
 
 }
