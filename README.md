@@ -1,1 +1,1 @@
-# pi-wallet-cli
+# Pi Wallet CLI
