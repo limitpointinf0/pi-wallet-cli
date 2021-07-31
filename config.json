@@ -1,0 +1,4 @@
+{
+    "server" : "https://api.testnet.minepi.com",
+    "networkPassphrase" : "Pi Testnet"
+}
