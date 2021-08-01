@@ -9,7 +9,10 @@ function check () {
     const server = new Stellar.Server(config.server)
 
     //get account information
-    const accountAddress = prompt(chalk.yellowBright('Account Address: '));
+    var accountAddress = config.my_address
+    if (!accountAddress){
+        var accountAddress = prompt(chalk.yellowBright('Account Address: '));
+    }
 
     const checkAccounts = async (accountAddress) => {
 

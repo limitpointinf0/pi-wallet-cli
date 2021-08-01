@@ -10,7 +10,10 @@ const prompt = require('prompt-sync')({ sigint: true });
 
 function txn() {
     //get source account information
-    const accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
+    var accountAddress = config.my_address
+    if (!accountAddress){
+        var accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
+    }
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
 
     //get destination account information
