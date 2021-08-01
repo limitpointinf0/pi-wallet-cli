@@ -16,8 +16,12 @@ function create() {
         publicKey: newKeypair.publicKey(),
     }
     //get source account information
-    const accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
+    var accountAddress = config.my_address
+    if (!accountAddress){
+        var accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
+    }
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase: '));
+    const fundAmt = prompt(chalk.yellowBright('Funding Amt: '));
 
     //create server object
     const server = new Stellar.Server(config.server)
@@ -39,7 +43,7 @@ function create() {
 
         const createAccountB = {
             destination: newWallet.publicKey,
-            startingBalance: '100.0000000',
+            startingBalance: fundAmt,
         }
         const txOptions = {
             fee: await server.fetchBaseFee(),
