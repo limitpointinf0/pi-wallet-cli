@@ -1,6 +1,6 @@
 # Pi Wallet CLI
 
-# Getting Started
+## Getting Started
 ```bash
     npm i -g
     pi-wallet
