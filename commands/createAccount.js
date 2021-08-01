@@ -22,7 +22,7 @@ function create() {
     if (!accountAddress){
         var accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
     }
-    const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase: '));
+    const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
     const fundAmt = prompt(chalk.yellowBright('Funding Amt: '));
 
     const status = new Spinner('Making transaction, please wait...');
@@ -71,7 +71,7 @@ function create() {
         getKeyPairFromSecret(accountPassphrase)
         .then((res) => transaction(res)
             .then(() => {
-                console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
+                console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
                 status.stop();
             })
             .catch((e) => { status.stop(); console.error(e); throw e})
@@ -81,7 +81,7 @@ function create() {
         getKeyPairFromPassphrase(accountPassphrase)
         .then((res) => transaction(res)
             .then(() => { 
-                console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
+                console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
                 status.stop();
             })
             .catch((e) => { status.stop(); console.error(e); throw e})
