@@ -7,6 +7,8 @@ const bip39 = require('bip39')
 const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
 const prompt = require('prompt-sync')({ sigint: true });
+const CLI = require('clui');
+const Spinner = CLI.Spinner;
 
 function txn() {
     //get source account information
@@ -24,6 +26,10 @@ function txn() {
 
     //get amount to transfer
     const transferMemo = prompt(chalk.yellowBright('Memo: '));
+
+    
+    const status = new Spinner('Making transaction, please wait...');
+    status.start();
 
     //create server object
     const server = new Stellar.Server(config.server)
@@ -72,28 +78,32 @@ function txn() {
         .then((res) => transaction(res)
             .then((tn) => {
                 if (tn.successful){
-                    console.log(chalk.green(`Transaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+                    status.stop();
+                    console.log(chalk.green(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
                 }else{
-                    console.log(chalk.red('Transaction Failed'))
+                    status.stop();
+                    console.log(chalk.red('\nTransaction Failed'))
                 }
             })
-            .catch((e) => { console.error(e); throw e})
+            .catch((e) => {status.stop(); console.error(e); throw e})
         )
-        .catch((e) => { console.error(e); throw e})
+        .catch((e) => {status.stop(); console.error(e); throw e})
     }else {
         // after getting account passphrase run 
         getKeyPairFromPassphrase(accountPassphrase)
         .then((res) => transaction(res)
             .then((tn) => {
                 if (tn.successful){
-                    console.log(chalk.green(`Transaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+                    console.log(chalk.green(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+                    status.stop();
                 }else{
-                    console.log(chalk.red('Transaction Failed'))
+                    console.log(chalk.red('\nTransaction Failed'))
+                    status.stop();
                 }
             })
-            .catch((e) => { console.error(e); throw e})
+            .catch((e) => { status.stop(); console.error(e); throw e})
         )
-        .catch((e) => { console.error(e); throw e})
+        .catch((e) => { status.stop(); console.error(e); throw e})
     }
 
 }

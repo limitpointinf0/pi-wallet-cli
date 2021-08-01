@@ -7,6 +7,8 @@ const bip39 = require('bip39')
 const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
 const prompt = require('prompt-sync')({ sigint: true });
+const CLI = require('clui');
+const Spinner = CLI.Spinner;
 
 function create() {
     //prepare keypairs for new wallet
@@ -22,6 +24,9 @@ function create() {
     }
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase: '));
     const fundAmt = prompt(chalk.yellowBright('Funding Amt: '));
+
+    const status = new Spinner('Making transaction, please wait...');
+    status.start();
 
     //create server object
     const server = new Stellar.Server(config.server)
@@ -65,17 +70,23 @@ function create() {
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
         getKeyPairFromSecret(accountPassphrase)
         .then((res) => transaction(res)
-            .then(() => console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`)))
-            .catch((e) => { console.error(e); throw e})
+            .then(() => {
+                console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
+                status.stop();
+            })
+            .catch((e) => { status.stop(); console.error(e); throw e})
         )
-        .catch((e) => { console.error(e); throw e})
+        .catch((e) => { status.stop(); console.error(e); throw e})
     }else {
         getKeyPairFromPassphrase(accountPassphrase)
         .then((res) => transaction(res)
-            .then(() => console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`)))
-            .catch((e) => { console.error(e); throw e})
+            .then(() => { 
+                console.log(chalk.yellowBright(`New Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
+                status.stop();
+            })
+            .catch((e) => { status.stop(); console.error(e); throw e})
         )
-        .catch((e) => { console.error(e); throw e})
+        .catch((e) => { status.stop(); console.error(e); throw e})
     }
 
 }

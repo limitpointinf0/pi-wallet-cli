@@ -4,6 +4,8 @@ const Stellar = require('stellar-sdk')
 const util = require('util')
 const prompt = require('prompt-sync')({ sigint: true });
 const config = require('../config.json');
+const CLI = require('clui');
+const Spinner = CLI.Spinner;
 
 function check () {
     const server = new Stellar.Server(config.server)
@@ -27,10 +29,18 @@ function check () {
         }
 
     }
-
+    const status = new Spinner('Checking account, please wait...');
+    status.start();
     checkAccounts(accountAddress)
-        .then((accounts) => console.log(util.inspect(accounts, false, null)))
-        .catch((e) => { console.error(e); throw e})
+        .then((accounts) => {
+            console.log('\n')
+            console.log(util.inspect(accounts, false, null))
+            status.stop();
+        })
+        .catch((e) => { 
+            status.stop();
+            console.error(e); throw e
+        })
 }
 
 module.exports = check;
