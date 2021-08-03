@@ -25,7 +25,7 @@ function create() {
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
     const fundAmt = prompt(chalk.yellowBright('Funding Amt: '));
 
-    const status = new Spinner('Making transaction, please wait...');
+    const status = new Spinner('Creating account, please wait...');
     status.start();
 
     //create server object
