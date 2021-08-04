@@ -23,6 +23,7 @@ function check () {
         return {
             accountId: account.id,
             balances: account.balances.map( balance => ({
+                asset: balance.asset_code,
                 type: balance.asset_type,
                 balance: balance.balance
             }))
@@ -37,6 +38,7 @@ function check () {
             console.log('\n')
             console.log(chalk.yellowBright(`Account ID: ${account.accountId}\n`))
             account.balances.forEach((balance) => {
+                console.log(chalk.yellowBright(`Asset: ${balance.type === "native" ? "PI" : balance.asset}`))
                 console.log(chalk.yellowBright(`Type: ${balance.type}`))
                 console.log(chalk.yellowBright(`Balance: ${balance.balance}`))
                 console.log('\n')
