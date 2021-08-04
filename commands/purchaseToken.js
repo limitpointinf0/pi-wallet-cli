@@ -58,13 +58,13 @@ function purchaseToken() {
         const manageSellOfferOpts = {
             selling: Stellar.Asset.native(),
             buying: customAsset,
-            amount: assetAmount,
+            buyAmount: assetAmount,
             price: assetPrice
         };
         const buyerAccount = await server.loadAccount(accountAddress)
         const transaction = new Stellar.TransactionBuilder(buyerAccount, txOptions)
             .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
-            .addOperation(Stellar.Operation.manageSellOffer(manageSellOfferOpts))
+            .addOperation(Stellar.Operation.manageBuyOffer(manageSellOfferOpts))
             .setTimeout(0)
             .build();
 
@@ -78,15 +78,25 @@ function purchaseToken() {
         getKeyPairFromSecret(accountPassphrase)
         .then((res) => transaction(res)
             .then((tn) => {
+                status.stop();
                 if (tn.successful){
-                    status.stop();
-                    console.log(tn)
+                    tn.offerResults.forEach( (t) => {
+                        console.log(t.offersClaimed)
+                        if (t.offersClaimed.length){
+                            t.offersClaimed.forEach ( (c) => {
+                                console.log(chalk.green(`Seller: ${c.sellerId}\nAsset Sold: ${c.assetSold.assetCode}\nAsset Bought: ${c.assetBought.assetCode}\nAmount Sold: ${c.amountSold}\nAmount Bought: ${c.amountBought}`))
+                            })
+                            console.log('\n')
+                        }else{
+                            console.log(chalk.red('Buy offer failed'))
+                            console.log('\n')
+                        }
+                    })
                 }else{
-                    status.stop();
                     console.log(chalk.red('\nTransaction Failed'))
                 }
             })
-            .catch((e) => {status.stop(); console.error(e); throw e})
+            .catch((e) => {status.stop(); console.error(e.response.data.extras.result_codes); throw e})
         )
         .catch((e) => {status.stop(); console.error(e); throw e})
     }else {
@@ -94,15 +104,25 @@ function purchaseToken() {
         getKeyPairFromPassphrase(accountPassphrase)
         .then((res) => transaction(res)
             .then((tn) => {
+                status.stop();
                 if (tn.successful){
-                    console.log(tn)
-                    status.stop();
+                    tn.offerResults.forEach( (t) => {
+                        console.log(t.offersClaimed)
+                        if (t.offersClaimed.length){
+                            t.offersClaimed.forEach ( (c) => {
+                                console.log(chalk.green(`Seller: ${c.sellerId}\nAsset Sold: ${c.assetSold.assetCode}\nAsset Bought: ${c.assetBought.assetCode}\nAmount Sold: ${c.amountSold}\nAmount Bought: ${c.amountBought}`))
+                            })
+                            console.log('\n')
+                        }else{
+                            console.log(chalk.red('Buy offer failed'))
+                            console.log('\n')
+                        }
+                    })
                 }else{
                     console.log(chalk.red('\nTransaction Failed'))
-                    status.stop();
                 }
             })
-            .catch((e) => { status.stop(); console.error(e); throw e})
+            .catch((e) => { status.stop(); console.error(e.response.data.extras.result_codes); throw e})
         )
         .catch((e) => { status.stop(); console.error(e); throw e})
     }
