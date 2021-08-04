@@ -6,6 +6,7 @@ const txn = require('./commands/makeTransfer')
 const create = require('./commands/createAccount')
 const set = require('./commands/setAccount')
 const unset = require('./commands/unsetAccount')
+const stream = require('./commands/streamPayments')
 
 program
     .command('check')
@@ -31,5 +32,10 @@ program
     .command('unset')
     .description('Unset an Account')
     .action(unset)
+
+program
+    .command('stream')
+    .description('Stream Payments')
+    .action(stream)
 
 program.parse()
