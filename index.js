@@ -4,6 +4,7 @@ const { program } = require('commander')
 const check = require('./commands/checkAccount')
 const txn = require('./commands/makeTransfer')
 const purchase = require('./commands/purchaseToken')
+const trustline = require('./commands/setTrustline')
 const create = require('./commands/createAccount')
 const set = require('./commands/setAccount')
 const unset = require('./commands/unsetAccount')
@@ -23,6 +24,11 @@ program
     .command('purchase')
     .description('Purchase an Asset')
     .action(purchase)
+
+program
+    .command('trust')
+    .description('Create Trustline')
+    .action(trustline)
 
 program
     .command('create')
