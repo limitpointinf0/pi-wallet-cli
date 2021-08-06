@@ -74,7 +74,14 @@ function create() {
                 console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
                 status.stop();
             })
-            .catch((e) => { status.stop(); console.error(e); throw e})
+            .catch((e) => { 
+                status.stop();
+                if (e.response){
+                    var displayError = e.response.statusText
+                    console.log(e.response.data.extras.result_codes);
+                    throw displayError;
+                }
+            })
         )
         .catch((e) => { status.stop(); console.error(e); throw e})
     }else {
@@ -84,7 +91,14 @@ function create() {
                 console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
                 status.stop();
             })
-            .catch((e) => { status.stop(); console.error(e); throw e})
+            .catch((e) => {
+                status.stop();
+                if (e.response){
+                    var displayError = e.response.statusText
+                    console.log(e.response.data.extras.result_codes);
+                    throw displayError;
+                }
+            })
         )
         .catch((e) => { status.stop(); console.error(e); throw e})
     }

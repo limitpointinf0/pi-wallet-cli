@@ -21,10 +21,22 @@ function txn() {
     //get destination account information
     const destAccountAddress = prompt(chalk.yellowBright('Destination Account Address: '));
 
-    //get amount to transfer
-    const transferAmt = prompt(chalk.yellowBright('Transer Amt: '));
+    //get asset to transfer
+    const assetName = prompt(chalk.yellowBright('Asset (blank for native): '));
+    const issuerAddress = prompt(chalk.yellowBright('Asset Issuer (blank for native): '));
+    var transferAsset;
+    if(assetName && issuerAddress) {
+        transferAsset = new Stellar.Asset(assetName, issuerAddress);
+    }else if ((assetName && !issuerAddress) || (!assetName && issuerAddress)) {
+        throw "For sending assets, both asset name and issuer address must be set!"
+    }else{
+        transferAsset = Stellar.Asset.native();
+    }
 
     //get amount to transfer
+    const transferAmt = prompt(chalk.yellowBright('Transfer Amt: '));
+
+    //get memo to transfer
     const transferMemo = prompt(chalk.yellowBright('Memo: '));
 
     
@@ -51,7 +63,7 @@ function txn() {
 
         const paymentToDest = {
             destination: destAccountAddress,
-            asset: Stellar.Asset.native(),
+            asset: transferAsset,
             amount: transferAmt, // Notice the use of the type string here
         }
         const txOptions = {
@@ -85,7 +97,14 @@ function txn() {
                     console.log(chalk.red('\nTransaction Failed'))
                 }
             })
-            .catch((e) => {status.stop(); console.error(e); throw e})
+            .catch((e) => {
+                status.stop();
+                if (e.response){
+                    var displayError = e.response.statusText
+                    console.log(e.response.data.extras.result_codes);
+                    throw displayError;
+                }
+            })
         )
         .catch((e) => {status.stop(); console.error(e); throw e})
     }else {
@@ -101,7 +120,14 @@ function txn() {
                     status.stop();
                 }
             })
-            .catch((e) => { status.stop(); console.error(e); throw e})
+            .catch((e) => { 
+                status.stop();
+                if (e.response){
+                    var displayError = e.response.statusText
+                    console.log(e.response.data.extras.result_codes);
+                    throw displayError;
+                }
+            })
         )
         .catch((e) => { status.stop(); console.error(e); throw e})
     }
