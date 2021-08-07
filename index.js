@@ -9,6 +9,7 @@ const create = require('./src/createAccount')
 const set = require('./src/setAccount')
 const unset = require('./src/unsetAccount')
 const stream = require('./src/streamActivity')
+const info = require('./src/info')
 
 program
     .command('set')
@@ -49,5 +50,10 @@ program
     .command('stream')
     .description('Stream Activity')
     .action(stream)
+
+program
+    .command('info')
+    .description('Info')
+    .action(info)
 
 program.parse()

@@ -1,3 +1,5 @@
+![Pi Wallet CLI Banner](./images/banner.png)
+
 # Pi Wallet CLI
 
 ## Getting Started: A Simple Walkthrough
