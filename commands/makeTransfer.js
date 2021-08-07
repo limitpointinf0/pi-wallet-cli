@@ -37,7 +37,7 @@ function txn() {
     const transferAmt = prompt(chalk.yellowBright('Transfer Amt: '));
 
     //get memo to transfer
-    const transferMemo = prompt(chalk.yellowBright('Memo: '));
+    const transferMemo = prompt(chalk.yellowBright('Memo (optional): '));
 
     
     const status = new Spinner('Making transaction, please wait...');
