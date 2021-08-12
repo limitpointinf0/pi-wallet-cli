@@ -20,9 +20,10 @@ function purchaseToken() {
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
 
     //get asset information
-    const assetName = prompt(chalk.yellowBright('Asset Name: '));
-    const assetAmount = prompt(chalk.yellowBright('Amount of Asset: '));
-    const assetPrice = prompt(chalk.yellowBright('Price of Asset: '));
+    const assetName = prompt(chalk.yellowBright('Asset Name to Buy: '));
+    const assetAmount = prompt(chalk.yellowBright('Amount of Asset to Buy: '));
+    const assetOffer = prompt(chalk.yellowBright('Selling Asset (blank for Pi): '));
+    const assetPrice = prompt(chalk.yellowBright('Price per unit: '));
     const issuerAddress = prompt(chalk.yellowBright('Issuer Account Address: '));
 
     const status = new Spinner('Making transaction, please wait...');
@@ -56,7 +57,7 @@ function purchaseToken() {
             asset: customAsset
         };
         const manageSellOfferOpts = {
-            selling: Stellar.Asset.native(),
+            selling: (assetOffer) ? assetOffer : Stellar.Asset.native(),
             buying: customAsset,
             buyAmount: assetAmount,
             price: assetPrice

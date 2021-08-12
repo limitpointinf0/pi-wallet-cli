@@ -22,8 +22,8 @@ function txn() {
     const destAccountAddress = prompt(chalk.yellowBright('Destination Account Address: '));
 
     //get asset to transfer
-    const assetName = prompt(chalk.yellowBright('Asset (blank for native): '));
-    const issuerAddress = prompt(chalk.yellowBright('Asset Issuer (blank for native): '));
+    const assetName = prompt(chalk.yellowBright('Asset (blank for Pi): '));
+    const issuerAddress = prompt(chalk.yellowBright('Asset Issuer (blank for Pi): '));
     var transferAsset;
     if(assetName && issuerAddress) {
         transferAsset = new Stellar.Asset(assetName, issuerAddress);
