@@ -128,7 +128,7 @@ function purchaseToken() {
                 console.log(chalk.red('\nTransaction Failed'))
             }
         })
-        .catch((e) => {status.stop(); console.error(e.response.data.extras.result_codes); throw e})
+        .catch(fail)
     )
     .catch((e) => {status.stop(); console.error(e); throw e})
 
