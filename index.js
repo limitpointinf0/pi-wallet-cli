@@ -2,8 +2,11 @@
 
 const { program } = require('commander')
 const check = require('./src/checkAccount')
-const txn = require('./src/makeTransfer')
-const purchase = require('./src/purchaseToken')
+const payment = require('./src/makePayment')
+const assets = require('./src/checkAssets')
+const orderbook = require('./src/checkOrderBook')
+const purchase = require('./src/purchaseAsset')
+const sell = require('./src/sellAsset')
 const trustline = require('./src/setTrustline')
 const create = require('./src/createAccount')
 const set = require('./src/setAccount')
@@ -27,9 +30,19 @@ program
     .action(check)
 
 program
-    .command('transfer')
-    .description('Make a Transfer')
-    .action(txn)
+    .command('pay')
+    .description('Make a Payment')
+    .action(payment)
+
+program
+    .command('assets')
+    .description('Check all Assets')
+    .action(assets) 
+    
+program
+    .command('orderbook')
+    .description('Check Order Book')
+    .action(orderbook)
 
 program
     .command('trust')
@@ -40,6 +53,11 @@ program
     .command('purchase')
     .description('Purchase an Asset')
     .action(purchase)
+
+program
+    .command('sell')
+    .description('Sell an Asset')
+    .action(sell)
 
 program
     .command('create')
