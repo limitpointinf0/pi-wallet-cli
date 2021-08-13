@@ -111,19 +111,9 @@ function purchaseToken() {
     .then((res) => transaction(res)
         .then((tn) => {
             status.stop();
+            console.log(tn)
             if (tn.successful){
-                tn.offerResults.forEach( (t) => {
-                    console.log(t.offersClaimed)
-                    if (t.offersClaimed.length){
-                        t.offersClaimed.forEach ( (c) => {
-                            console.log(chalk.green(`Seller: ${c.sellerId}\nAsset Sold: ${c.assetSold.assetCode}\nAsset Bought: ${c.assetBought.assetCode}\nAmount Sold: ${c.amountSold}\nAmount Bought: ${c.amountBought}`))
-                        })
-                        console.log('\n')
-                    }else{
-                        console.log(chalk.red('Buy offer failed'))
-                        console.log('\n')
-                    }
-                })
+                console.log(chalk.yellowBright('\nBuy Offer Created'))
             }else{
                 console.log(chalk.red('\nTransaction Failed'))
             }

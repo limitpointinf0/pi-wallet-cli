@@ -100,13 +100,8 @@ function setTrustline() {
     getKeyPair(accountPassphrase)
     .then((res) => transaction(res)
         .then((tn) => {
-            if (tn.successful){
-                status.stop();
-                console.log(chalk.green(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
-            }else{
-                status.stop();
-                console.log(chalk.red('\nTransaction Failed'))
-            }
+            status.stop()
+            console.log(chalk.magentaBright(`Trustline set for ${assetName}`))
         })
         .catch(fail)
     )
