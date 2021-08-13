@@ -31,6 +31,9 @@ function purchaseToken() {
     const assetPrice = prompt(chalk.yellowBright('Price per unit: '));
     const issuerAddress = prompt(chalk.yellowBright('Issuer Account Address: '));
 
+    //ask confirmation
+    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
+
     const status = new Spinner('Making transaction, please wait...');
     status.start();
 

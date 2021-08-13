@@ -25,6 +25,10 @@ function txn() {
 
     //get destination account information
     const destAccountAddress = prompt(chalk.yellowBright('Destination Account Address: '));
+    if (!StellarBase.StrKey.isValidEd25519PublicKey(destAccountAddress)) {
+        console.log(chalk.red('Not a valid destination address'))
+        process.exit(1);
+    }
 
     //get asset to transfer
     const assetName = prompt(chalk.yellowBright('Asset (blank for Pi): '));
@@ -40,9 +44,10 @@ function txn() {
 
     //get amount to transfer
     const transferAmt = prompt(chalk.yellowBright('Transfer Amt: '));
-
     //get memo to transfer
     const transferMemo = prompt(chalk.yellowBright('Memo (optional): '));
+    //ask confirmation
+    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
 
     
     const status = new Spinner('Making transaction, please wait...');
@@ -118,7 +123,7 @@ function txn() {
         .then((tn) => {
             if (tn.successful){
                 status.stop();
-                console.log(chalk.green(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+                console.log(chalk.magentaBright(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
             }else{
                 status.stop();
                 console.log(chalk.red('\nTransaction Failed'))

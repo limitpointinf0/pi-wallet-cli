@@ -28,6 +28,9 @@ function setTrustline() {
     const assetName = prompt(chalk.yellowBright('Asset Name: '));
     const issuerAddress = prompt(chalk.yellowBright('Issuer Account Address: '));
 
+    //ask confirmation
+    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
+
     const status = new Spinner('Making transaction, please wait...');
     status.start();
 

@@ -30,6 +30,9 @@ function create() {
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
     const fundAmt = prompt(chalk.yellowBright('Funding Amt: '));
 
+    //ask confirmation
+    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
+
     const status = new Spinner('Creating account, please wait...');
     status.start();
 
