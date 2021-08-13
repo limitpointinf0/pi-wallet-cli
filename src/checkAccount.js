@@ -8,6 +8,11 @@ const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 function check () {
+
+    console.log(chalk.yellowBright('-----------------------------------------------'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Check Account'))
+    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+
     const server = new Stellar.Server(config.server)
 
     //get account information

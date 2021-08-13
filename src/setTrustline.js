@@ -12,6 +12,11 @@ const Spinner = CLI.Spinner;
 
 
 function setTrustline() {
+
+    console.log(chalk.yellowBright('-----------------------------------------------'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Set Trustline'))
+    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+
     //get source account information
     var accountAddress = config.my_address
     if (!accountAddress){
@@ -41,6 +46,22 @@ function setTrustline() {
         return Stellar.Keypair.fromSecret(secret)
     }
 
+    const fail = (message) => {
+        console.log('\n')
+        console.error(chalk.red(message))
+        if (message.response && message.response.data && message.response.data.extras && message.response.data.extras.result_codes && message.response.data.extras.result_codes.operations) {
+            const reason = message.response.data.extras.result_codes.operations;
+            switch(reason) {
+                case 'op_underfunded':
+                    console.log(chalk.red('reason:', 'Sender account has insufficient funds'));
+                    break;
+                default:
+                    console.log(chalk.red('reason:', reason))
+            }
+        }
+        process.exit(1)
+    }
+
     //building transaction function
     const transaction = async (keypair) => {
 
@@ -65,36 +86,28 @@ function setTrustline() {
         return response
     }
 
+    var getKeyPair;
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
-        getKeyPairFromSecret(accountPassphrase)
-        .then((res) => transaction(res)
-            .then((tn) => {
-                status.stop();
-                if (tn.successful){
-                    console.log('Set trustline succeeded')
-                }else{
-                    console.log(chalk.red('\nTransaction Failed'))
-                }
-            })
-            .catch((e) => {status.stop(); console.error(e); throw e})
-        )
-        .catch((e) => {status.stop(); console.error(e); throw e})
-    }else {
-        // after getting account passphrase run 
-        getKeyPairFromPassphrase(accountPassphrase)
-        .then((res) => transaction(res)
-            .then((tn) => {
-                status.stop();
-                if (tn.successful){
-                    console.log('Set trustline succeeded')
-                }else{
-                    console.log(chalk.red('\nTransaction Failed'))
-                }
-            })
-            .catch((e) => { status.stop(); console.error(e); throw e})
-        )
-        .catch((e) => { status.stop(); console.error(e); throw e})
+        getKeyPair = getKeyPairFromSecret;
+    } 
+    else {
+        getKeyPair = getKeyPairFromPassphrase;
     }
+
+    getKeyPair(accountPassphrase)
+    .then((res) => transaction(res)
+        .then((tn) => {
+            if (tn.successful){
+                status.stop();
+                console.log(chalk.green(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+            }else{
+                status.stop();
+                console.log(chalk.red('\nTransaction Failed'))
+            }
+        })
+        .catch(fail)
+    )
+    .catch((e) => {status.stop(); console.error(e); throw e})
 
 }
 

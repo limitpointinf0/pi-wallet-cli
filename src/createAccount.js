@@ -11,6 +11,11 @@ const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 function create() {
+
+    console.log(chalk.yellowBright('-----------------------------------------------'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Create Account'))
+    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+
     //prepare keypairs for new wallet
     const newKeypair = Stellar.Keypair.random()
     const newWallet =  {
@@ -43,6 +48,22 @@ function create() {
         return Stellar.Keypair.fromSecret(secret)
     }
 
+    const fail = (message) => {
+        console.log('\n')
+        console.error(chalk.red(message))
+        if (message.response && message.response.data && message.response.data.extras && message.response.data.extras.result_codes && message.response.data.extras.result_codes.operations) {
+            const reason = message.response.data.extras.result_codes.operations;
+            switch(reason) {
+                case 'op_underfunded':
+                    console.log(chalk.red('reason:', 'Sender account has insufficient funds'));
+                    break;
+                default:
+                    console.log(chalk.red('reason:', reason))
+            }
+        }
+        process.exit(1)
+    }
+
     //building transaction function
     const transaction = async (keypair) => {
 
@@ -56,52 +77,40 @@ function create() {
         }
         const accountA = await server.loadAccount(accountAddress)
         const transaction = new Stellar.TransactionBuilder(accountA, txOptions)
+            .addOperation(Stellar.Operation.beginSponsoringFutureReserves({
+                sponsoredId: newWallet.publicKey,
+            }))
             .addOperation(Stellar.Operation.createAccount(createAccountB))
+            .addOperation(Stellar.Operation.endSponsoringFutureReserves({
+                source: newWallet.publicKey,
+            }))
             .addMemo(Stellar.Memo.text('Create New Wallet'))
             .setTimeout(TimeoutInfinite)
             .build()
-
-        transaction.sign(keypair)
+        
+        transaction.sign(keypair, newKeypair)
 
         await server.submitTransaction(transaction)
 
     }
 
+    var getKeyPair;
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
-        getKeyPairFromSecret(accountPassphrase)
-        .then((res) => transaction(res)
-            .then(() => {
-                console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
-                status.stop();
-            })
-            .catch((e) => { 
-                status.stop();
-                if (e.response){
-                    var displayError = e.response.statusText
-                    console.log(e.response.data.extras.result_codes);
-                    throw displayError;
-                }
-            })
-        )
-        .catch((e) => { status.stop(); console.error(e); throw e})
-    }else {
-        getKeyPairFromPassphrase(accountPassphrase)
-        .then((res) => transaction(res)
-            .then(() => { 
-                console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
-                status.stop();
-            })
-            .catch((e) => {
-                status.stop();
-                if (e.response){
-                    var displayError = e.response.statusText
-                    console.log(e.response.data.extras.result_codes);
-                    throw displayError;
-                }
-            })
-        )
-        .catch((e) => { status.stop(); console.error(e); throw e})
+        getKeyPair = getKeyPairFromSecret;
+    } 
+    else {
+        getKeyPair = getKeyPairFromPassphrase;
     }
+
+    getKeyPair(accountPassphrase)
+    .then((res) => transaction(res)
+        .then(() => {
+            console.log(chalk.yellowBright(`\nNew Wallet Created!\nPrivate Key: ${newWallet.secretSeed}\nPublic Key: ${newWallet.publicKey}`))
+            status.stop();
+        })
+        .catch(fail)
+    )
+    .catch((e) => { status.stop(); console.error(e); throw e})
 
 }
 

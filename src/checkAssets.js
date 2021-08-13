@@ -5,6 +5,11 @@ const prompt = require('prompt-sync')({ sigint: true });
 const chalk = require('chalk');
 
 function checkAssets() {
+
+    console.log(chalk.yellowBright('-----------------------------------------------'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Check Assets'))
+    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+
     var reqUrl = config.server + '/assets?limit=3'
     const assetCode = prompt(chalk.yellowBright('Asset Code (optional): '));
     const assetIssuer = prompt(chalk.yellowBright('Asset Issuer (optional): '));

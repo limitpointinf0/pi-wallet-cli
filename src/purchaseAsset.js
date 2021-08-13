@@ -12,6 +12,11 @@ const Spinner = CLI.Spinner;
 
 
 function purchaseToken() {
+
+    console.log(chalk.yellowBright('-----------------------------------------------'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Purchase Asset'))
+    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+
     //get source account information
     var accountAddress = config.my_address
     if (!accountAddress){
@@ -44,6 +49,22 @@ function purchaseToken() {
         return Stellar.Keypair.fromSecret(secret)
     }
 
+    const fail = (message) => {
+        console.log('\n')
+        console.error(chalk.red(message))
+        if (message.response && message.response.data && message.response.data.extras && message.response.data.extras.result_codes && message.response.data.extras.result_codes.operations) {
+            const reason = message.response.data.extras.result_codes.operations;
+            switch(reason) {
+                case 'op_underfunded':
+                    console.log(chalk.red('reason:', 'Sender account has insufficient funds'));
+                    break;
+                default:
+                    console.log(chalk.red('reason:', reason))
+            }
+        }
+        process.exit(1)
+    }
+
     //building transaction function
     const transaction = async (keypair) => {
 
@@ -56,7 +77,7 @@ function purchaseToken() {
         const changeTrustOpts = {
             asset: customAsset
         };
-        const manageSellOfferOpts = {
+        const manageBuyOfferOpts = {
             selling: (assetOffer) ? assetOffer : Stellar.Asset.native(),
             buying: customAsset,
             buyAmount: assetAmount,
@@ -65,7 +86,7 @@ function purchaseToken() {
         const buyerAccount = await server.loadAccount(accountAddress)
         const transaction = new Stellar.TransactionBuilder(buyerAccount, txOptions)
             .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
-            .addOperation(Stellar.Operation.manageBuyOffer(manageSellOfferOpts))
+            .addOperation(Stellar.Operation.manageBuyOffer(manageBuyOfferOpts))
             .setTimeout(0)
             .build();
 
@@ -75,58 +96,38 @@ function purchaseToken() {
         return response
     }
 
+    var getKeyPair;
     if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
-        getKeyPairFromSecret(accountPassphrase)
-        .then((res) => transaction(res)
-            .then((tn) => {
-                status.stop();
-                if (tn.successful){
-                    tn.offerResults.forEach( (t) => {
-                        console.log(t.offersClaimed)
-                        if (t.offersClaimed.length){
-                            t.offersClaimed.forEach ( (c) => {
-                                console.log(chalk.green(`Seller: ${c.sellerId}\nAsset Sold: ${c.assetSold.assetCode}\nAsset Bought: ${c.assetBought.assetCode}\nAmount Sold: ${c.amountSold}\nAmount Bought: ${c.amountBought}`))
-                            })
-                            console.log('\n')
-                        }else{
-                            console.log(chalk.red('Buy offer failed'))
-                            console.log('\n')
-                        }
-                    })
-                }else{
-                    console.log(chalk.red('\nTransaction Failed'))
-                }
-            })
-            .catch((e) => {status.stop(); console.error(e.response.data.extras.result_codes); throw e})
-        )
-        .catch((e) => {status.stop(); console.error(e); throw e})
-    }else {
-        // after getting account passphrase run 
-        getKeyPairFromPassphrase(accountPassphrase)
-        .then((res) => transaction(res)
-            .then((tn) => {
-                status.stop();
-                if (tn.successful){
-                    tn.offerResults.forEach( (t) => {
-                        console.log(t.offersClaimed)
-                        if (t.offersClaimed.length){
-                            t.offersClaimed.forEach ( (c) => {
-                                console.log(chalk.green(`Seller: ${c.sellerId}\nAsset Sold: ${c.assetSold.assetCode}\nAsset Bought: ${c.assetBought.assetCode}\nAmount Sold: ${c.amountSold}\nAmount Bought: ${c.amountBought}`))
-                            })
-                            console.log('\n')
-                        }else{
-                            console.log(chalk.red('Buy offer failed'))
-                            console.log('\n')
-                        }
-                    })
-                }else{
-                    console.log(chalk.red('\nTransaction Failed'))
-                }
-            })
-            .catch((e) => { status.stop(); console.error(e.response.data.extras.result_codes); throw e})
-        )
-        .catch((e) => { status.stop(); console.error(e); throw e})
+        getKeyPair = getKeyPairFromSecret;
+    } 
+    else {
+        getKeyPair = getKeyPairFromPassphrase;
     }
+
+    getKeyPair(accountPassphrase)
+    .then((res) => transaction(res)
+        .then((tn) => {
+            status.stop();
+            if (tn.successful){
+                tn.offerResults.forEach( (t) => {
+                    console.log(t.offersClaimed)
+                    if (t.offersClaimed.length){
+                        t.offersClaimed.forEach ( (c) => {
+                            console.log(chalk.green(`Seller: ${c.sellerId}\nAsset Sold: ${c.assetSold.assetCode}\nAsset Bought: ${c.assetBought.assetCode}\nAmount Sold: ${c.amountSold}\nAmount Bought: ${c.amountBought}`))
+                        })
+                        console.log('\n')
+                    }else{
+                        console.log(chalk.red('Buy offer failed'))
+                        console.log('\n')
+                    }
+                })
+            }else{
+                console.log(chalk.red('\nTransaction Failed'))
+            }
+        })
+        .catch((e) => {status.stop(); console.error(e.response.data.extras.result_codes); throw e})
+    )
+    .catch((e) => {status.stop(); console.error(e); throw e})
 
 }
 

@@ -4,12 +4,17 @@ const server = new StellarSdk.Server("https://api.testnet.minepi.com");
 const config = require('../config.json');
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
+const chalk = require('chalk')
 
 // Get a message any time a payment occurs. Cursor is set to "now" to be notified
 // of payments happening starting from when this script runs (as opposed to from
 // the beginning of time).
 
 function streamPayments() {
+
+    console.log(chalk.yellowBright('-----------------------------------------------'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Stream Activity'))
+    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
 
     var accountAddress = config.my_address
     if (!accountAddress){
