@@ -2,6 +2,8 @@
 
 # Pi Wallet CLI
 
+[![GitHub](https://img.shields.io/github/license/limitpointinf0/pi-wallet-cli)](https://github.com/limitpointinf0/pi-wallet-cli/blob/main/LICENSE)
+
 ## Getting Started: A Simple Walkthrough
 
 1. Setup the pi-wallet command globally
@@ -47,13 +49,19 @@ If the trustline setup succeeds, you can check your account balance and see the 
 pi-wallet check
 ```
 
-### Purchasing an Asset
-Purchasing an asset may be done using the following
+### Purchasing/Selling an Asset
+Purchasing/Selling an asset may be done using the following
 ```bash
 pi-wallet purchase
 ```
+or
+```bash
+pi-wallet sell
+```
+
 - Source Account Passphrase/PrivateKey: [Your wallet passphrase or private key] 
-- Asset Name: [Name of the asset you want to purchase]
-- Amount of Asset: [Amount of asset you want to purchase]
-- Price of Asset: [Price of asset per unit]
+- Asset Name to Buy/Sell: [Name of the asset you want to purchase/sell]
+- Amount of Asset to Buy/Sell: [Amount of asset you want to purchase/sell]
+- Buying/Selling Asset: [Name of asset you want to trade]
+- Price per unit: [Price of asset per unit]
 - Issuer Account Address: [Address of issuer account for this asset]

@@ -27,9 +27,10 @@ function purchaseToken() {
     //get asset information
     const assetName = prompt(chalk.yellowBright('Asset Name to Buy: '));
     const assetAmount = prompt(chalk.yellowBright('Amount of Asset to Buy: '));
-    const assetOffer = prompt(chalk.yellowBright('Selling Asset (blank for Pi): '));
+    const assetOffer = prompt(chalk.yellowBright('Selling Asset (blank for native): '));
     const assetPrice = prompt(chalk.yellowBright('Price per unit: '));
-    const issuerAddress = prompt(chalk.yellowBright('Issuer Account Address: '));
+    const buyIssuerAddress = prompt(chalk.yellowBright('Buy Issuer Account Address: '));
+    const sellIssuerAddress = prompt(chalk.yellowBright('Sell Issuer Account Address: '));
 
     //ask confirmation
     prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
@@ -70,8 +71,8 @@ function purchaseToken() {
 
     //building transaction function
     const transaction = async (keypair) => {
-
-        const customAsset = new Stellar.Asset(assetName, issuerAddress);
+        const customAsset = new Stellar.Asset(assetName, buyIssuerAddress);
+        const sellingAsset = (assetOffer) ? new Stellar.Asset(assetOffer, sellIssuerAddress) : Stellar.Asset.native();
 
         const txOptions = {
             fee: await server.fetchBaseFee(),
@@ -81,11 +82,12 @@ function purchaseToken() {
             asset: customAsset
         };
         const manageBuyOfferOpts = {
-            selling: (assetOffer) ? assetOffer : Stellar.Asset.native(),
+            selling: sellingAsset,
             buying: customAsset,
             buyAmount: assetAmount,
             price: assetPrice
         };
+
         const buyerAccount = await server.loadAccount(accountAddress)
         const transaction = new Stellar.TransactionBuilder(buyerAccount, txOptions)
             .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
@@ -111,7 +113,6 @@ function purchaseToken() {
     .then((res) => transaction(res)
         .then((tn) => {
             status.stop();
-            console.log(tn)
             if (tn.successful){
                 console.log(chalk.yellowBright('\nBuy Offer Created'))
             }else{

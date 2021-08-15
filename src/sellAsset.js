@@ -27,9 +27,10 @@ function sellToken() {
     //get asset information
     const assetName = prompt(chalk.yellowBright('Asset Name to Sell: '));
     const assetAmount = prompt(chalk.yellowBright('Amount of Asset to Sell: '));
-    const assetOffer = prompt(chalk.yellowBright('Buying Asset (blank for Pi): '));
+    const assetOffer = prompt(chalk.yellowBright('Buying Asset (blank for native): '));
     const assetPrice = prompt(chalk.yellowBright('Price per unit: '));
-    const issuerAddress = prompt(chalk.yellowBright('Issuer Account Address: '));
+    const buyIssuerAddress = prompt(chalk.yellowBright('Buy Issuer Account Address: '));
+    const sellIssuerAddress = prompt(chalk.yellowBright('Sell Issuer Account Address: '));
 
     //ask confirmation
     prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
@@ -71,22 +72,26 @@ function sellToken() {
     //building transaction function
     const transaction = async (keypair) => {
 
-        const customAsset = new Stellar.Asset(assetName, issuerAddress);
-
+        const customAsset = new Stellar.Asset(assetName, buyIssuerAddress);
+        const buyingAsset = (assetOffer) ? new Stellar.Asset(assetOffer, sellIssuerAddress) : Stellar.Asset.native()
+        
         const txOptions = {
             fee: await server.fetchBaseFee(),
             networkPassphrase: config.networkPassphrase,
         }
-
+        const changeTrustOpts = {
+            asset: buyingAsset
+        };
         const manageSellOfferOpts = {
             selling: customAsset,
-            buying: (assetOffer) ? assetOffer : Stellar.Asset.native(),
+            buying: buyingAsset,
             amount: assetAmount,
             price: assetPrice
         };
 
         const sellerAccount = await server.loadAccount(accountAddress)
         const transaction = new Stellar.TransactionBuilder(sellerAccount, txOptions)
+            .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
             .addOperation(Stellar.Operation.manageSellOffer(manageSellOfferOpts))
             .setTimeout(0)
             .build();
@@ -109,7 +114,6 @@ function sellToken() {
     .then((res) => transaction(res)
         .then((tn) => {
             status.stop();
-            console.log(tn)
             if (tn.successful){
                 console.log(chalk.yellowBright('\nSell Offer Created'))
             }else{
