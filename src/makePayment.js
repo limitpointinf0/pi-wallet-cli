@@ -10,19 +10,15 @@ const prompt = require('prompt-sync')({ sigint: true });
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
-function txn() {
+function makePayment() {
 
     console.log(chalk.yellowBright('-----------------------------------------------'))
     console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Make Payment'))
     console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
 
     //get source account information
-    var accountAddress = config.my_address
-    if (!accountAddress){
-        var accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
-    }
+    const accountAddress = (config.my_address) ? config.my_address : prompt(chalk.yellowBright('Source Account Address: '));
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
-
     //get destination account information
     const destAccountAddress = prompt(chalk.yellowBright('Destination Account Address: '));
     if (!StellarBase.StrKey.isValidEd25519PublicKey(destAccountAddress)) {
@@ -62,11 +58,11 @@ function txn() {
         const derivedSeed = ed25519.derivePath("m/44'/314159'/0'", seed)
         return Stellar.Keypair.fromRawEd25519Seed(derivedSeed.key)
     }
-
     //helper function to return KeyPair from Private Key
     const getKeyPairFromSecret = async function (secret) {
         return Stellar.Keypair.fromSecret(secret)
     }
+    const getKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) ? getKeyPairFromSecret : getKeyPairFromPassphrase;
 
     const fail = (message) => {
         console.log('\n')
@@ -84,13 +80,24 @@ function txn() {
         process.exit(1)
     }
 
+    const success = (tn) => {
+        status.stop();
+        if (tn.successful){
+            console.log(chalk.magentaBright(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
+        }else{
+            console.log(chalk.red('\nTransaction Failed'))
+        }
+    }
+
     //building transaction function
-    const transaction = async (keypair) => {
+    const transaction = async () => {
+
+        const keypair = await getKeyPair(accountPassphrase)
 
         const paymentToDest = {
             destination: destAccountAddress,
             asset: transferAsset,
-            amount: transferAmt, // Notice the use of the type string here
+            amount: transferAmt,
         }
         const txOptions = {
             fee: await server.fetchBaseFee(),
@@ -109,30 +116,9 @@ function txn() {
         return response
 
     }
-
-    var getKeyPair;
-    if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
-        getKeyPair = getKeyPairFromSecret;
-    } 
-    else {
-        getKeyPair = getKeyPairFromPassphrase;
-    }
     
-    getKeyPair(accountPassphrase)
-    .then((res) => transaction(res)
-        .then((tn) => {
-            if (tn.successful){
-                status.stop();
-                console.log(chalk.magentaBright(`\nTransaction succeeded!\nDestination: ${destAccountAddress}\nAmt: ${transferAmt}\nMemo: ${transferMemo}\nLink: ${tn._links.transaction.href}`))
-            }else{
-                status.stop();
-                console.log(chalk.red('\nTransaction Failed'))
-            }
-        })
-        .catch(fail)
-    )
-    .catch((e) => {status.stop(); console.error(e); throw e})
+    transaction().then(success).catch(fail)
 
 }
 
-module.exports = txn
+module.exports = makePayment;

@@ -18,10 +18,7 @@ function setTrustline() {
     console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
 
     //get source account information
-    var accountAddress = config.my_address
-    if (!accountAddress){
-        var accountAddress = prompt(chalk.yellowBright('Source Account Address: '));
-    }
+    const accountAddress = (config.my_address) ? config.my_address : prompt(chalk.yellowBright('Source Account Address: '));
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
 
     //get asset information
@@ -33,6 +30,9 @@ function setTrustline() {
 
     const status = new Spinner('Making transaction, please wait...');
     status.start();
+
+    //prepare assets
+    const customAsset = new Stellar.Asset(assetName, issuerAddress);
 
     //create server object
     const server = new Stellar.Server(config.server)
@@ -48,6 +48,8 @@ function setTrustline() {
     const getKeyPairFromSecret = async function (secret) {
         return Stellar.Keypair.fromSecret(secret)
     }
+
+    const getKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) ? getKeyPairFromSecret : getKeyPairFromPassphrase;
 
     const fail = (message) => {
         console.log('\n')
@@ -65,10 +67,14 @@ function setTrustline() {
         process.exit(1)
     }
 
-    //building transaction function
-    const transaction = async (keypair) => {
+    const success = (tn) => {
+        status.stop()
+        console.log(chalk.magentaBright(`Trustline set for ${assetName}`))
+    }
 
-        const customAsset = new Stellar.Asset(assetName, issuerAddress);
+    //building transaction function
+    const transaction = async () => {
+        const keypair = await getKeyPair(accountPassphrase)
 
         const txOptions = {
             fee: await server.fetchBaseFee(),
@@ -89,23 +95,7 @@ function setTrustline() {
         return response
     }
 
-    var getKeyPair;
-    if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
-        getKeyPair = getKeyPairFromSecret;
-    } 
-    else {
-        getKeyPair = getKeyPairFromPassphrase;
-    }
-
-    getKeyPair(accountPassphrase)
-    .then((res) => transaction(res)
-        .then((tn) => {
-            status.stop()
-            console.log(chalk.magentaBright(`Trustline set for ${assetName}`))
-        })
-        .catch(fail)
-    )
-    .catch((e) => {status.stop(); console.error(e); throw e})
+    transaction().then(success).catch(fail)
 
 }
 

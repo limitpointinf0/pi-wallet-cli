@@ -11,10 +11,10 @@ const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 
-function sellToken() {
+function createToken() {
 
     console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Sell Asset'))
+    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Create Asset'))
     console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
 
     //get source account information
@@ -22,9 +22,9 @@ function sellToken() {
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
 
     //get asset information
-    const assetName = prompt(chalk.yellowBright('Asset Name to Sell: '));
-    const assetAmount = prompt(chalk.yellowBright('Amount of Asset to Sell: '));
-    const assetOffer = prompt(chalk.yellowBright('Buying Asset (blank for native): '));
+    const assetName = prompt(chalk.yellowBright('Asset Name to Buy: '));
+    const assetAmount = prompt(chalk.yellowBright('Amount of Asset to Buy: '));
+    const assetOffer = prompt(chalk.yellowBright('Selling Asset (blank for native): '));
     const assetPrice = prompt(chalk.yellowBright('Price per unit: '));
     const buyIssuerAddress = prompt(chalk.yellowBright('Buy Issuer Account Address: '));
     const sellIssuerAddress = prompt(chalk.yellowBright('Sell Issuer Account Address: '));
@@ -34,10 +34,6 @@ function sellToken() {
 
     const status = new Spinner('Making transaction, please wait...');
     status.start();
-
-    //prepare assets
-    const customAsset = new Stellar.Asset(assetName, buyIssuerAddress);
-    const buyingAsset = (assetOffer) ? new Stellar.Asset(assetOffer, sellIssuerAddress) : Stellar.Asset.native()
 
     //create server object
     const server = new Stellar.Server(config.server)
@@ -53,8 +49,6 @@ function sellToken() {
     const getKeyPairFromSecret = async function (secret) {
         return Stellar.Keypair.fromSecret(secret)
     }
-
-    const getKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) ? getKeyPairFromSecret : getKeyPairFromPassphrase;
 
     const fail = (message) => {
         console.log('\n')
@@ -72,37 +66,29 @@ function sellToken() {
         process.exit(1)
     }
 
-    const success = (tn) => {
-        status.stop();
-        if (tn.successful){
-            console.log(chalk.yellowBright('\nSell Offer Created'))
-        }else{
-            console.log(chalk.red('\nTransaction Failed'))
-        }
-    }
-
     //building transaction function
-    const transaction = async () => {
-        const keypair = await getKeyPair(accountPassphrase)
-        
+    const transaction = async (keypair) => {
+        const customAsset = new Stellar.Asset(assetName, buyIssuerAddress);
+        const sellingAsset = (assetOffer) ? new Stellar.Asset(assetOffer, sellIssuerAddress) : Stellar.Asset.native();
+
         const txOptions = {
             fee: await server.fetchBaseFee(),
             networkPassphrase: config.networkPassphrase,
         }
         const changeTrustOpts = {
-            asset: buyingAsset
+            asset: customAsset
         };
-        const manageSellOfferOpts = {
-            selling: customAsset,
-            buying: buyingAsset,
-            amount: assetAmount,
+        const manageBuyOfferOpts = {
+            selling: sellingAsset,
+            buying: customAsset,
+            buyAmount: assetAmount,
             price: assetPrice
         };
 
-        const sellerAccount = await server.loadAccount(accountAddress)
-        const transaction = new Stellar.TransactionBuilder(sellerAccount, txOptions)
+        const buyerAccount = await server.loadAccount(accountAddress)
+        const transaction = new Stellar.TransactionBuilder(buyerAccount, txOptions)
             .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
-            .addOperation(Stellar.Operation.manageSellOffer(manageSellOfferOpts))
+            .addOperation(Stellar.Operation.manageBuyOffer(manageBuyOfferOpts))
             .setTimeout(0)
             .build();
 
@@ -112,8 +98,28 @@ function sellToken() {
         return response
     }
 
-    transaction().then(success).catch(fail)
+    var getKeyPair;
+    if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
+        getKeyPair = getKeyPairFromSecret;
+    } 
+    else {
+        getKeyPair = getKeyPairFromPassphrase;
+    }
+
+    getKeyPair(accountPassphrase)
+    .then((res) => transaction(res)
+        .then((tn) => {
+            status.stop();
+            if (tn.successful){
+                console.log(chalk.yellowBright('\nBuy Offer Created'))
+            }else{
+                console.log(chalk.red('\nTransaction Failed'))
+            }
+        })
+        .catch(fail)
+    )
+    .catch((e) => {status.stop(); console.error(e); throw e})
 
 }
 
-module.exports = sellToken
+module.exports = createToken
