@@ -65,3 +65,19 @@ pi-wallet sell
 - Buying/Selling Asset: [Name of asset you want to trade]
 - Price per unit: [Price of asset per unit]
 - Issuer Account Address: [Address of issuer account for this asset]
+
+
+### Creating a Custom Asset
+Creating an asset may be done using the following
+```bash
+pi-wallet createasset
+```
+
+- Issuer Account Address: [Issuer public key] 
+- Issuer Account Passphrase/Private Key: [Issuer account passphrase or private key]
+- Distributor Account Address: [Distributor public key] 
+- Distributor Account Passphrase/Private Key: [Distributor account passphrase or private key]
+- Asset Name: [Name for your asset]
+- Asset Amount: [Amount of asset you want to create]
+- Asset Data [name]: [Key for key/value pair, data regarding the asset]
+- Asset Data [value]: [Value for key/value pair, data regarding the asset]
