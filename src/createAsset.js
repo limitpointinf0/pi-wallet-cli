@@ -11,32 +11,30 @@ const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 
-function createToken() {
-
+function main() {
     console.log(chalk.yellowBright('-----------------------------------------------'))
     console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Create Asset'))
     console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
 
-    //get source account information
-    const accountAddress = (config.my_address) ? config.my_address : prompt(chalk.yellowBright('Source Account Address: '));
-    const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
-
-    //get asset information
-    const assetName = prompt(chalk.yellowBright('Asset Name to Buy: '));
-    const assetAmount = prompt(chalk.yellowBright('Amount of Asset to Buy: '));
-    const assetOffer = prompt(chalk.yellowBright('Selling Asset (blank for native): '));
-    const assetPrice = prompt(chalk.yellowBright('Price per unit: '));
-    const buyIssuerAddress = prompt(chalk.yellowBright('Buy Issuer Account Address: '));
-    const sellIssuerAddress = prompt(chalk.yellowBright('Sell Issuer Account Address: '));
-
-    //ask confirmation
-    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
-
-    const status = new Spinner('Making transaction, please wait...');
-    status.start();
+    var context = {};
 
     //create server object
-    const server = new Stellar.Server(config.server)
+    context.server = new Stellar.Server(config.server)
+
+    //get issuer account information
+    context.issuerAccountAddress = prompt(chalk.yellowBright('Issuer Account Address: '));
+    context.issuerAccountPass = prompt(chalk.yellowBright('Issuer Account Passphrase/PrivateKey: '));
+
+    //get distributor account information
+    context.distributorAccountAddress = prompt(chalk.yellowBright('Distributor Account Address: '));
+    context.distributorAccountPass = prompt(chalk.yellowBright('Distributor Account Passphrase/PrivateKey: '));
+
+    //get asset information
+    context.assetName = prompt(chalk.yellowBright('Asset Name: '));
+    context.customAsset = new Stellar.Asset(context.assetName, context.issuerAccountAddress);
+    context.assetAmount = prompt(chalk.yellowBright('Asset Amount: '));
+    context.dataoptsName = prompt(chalk.yellowBright('Asset Data [name]: '));
+    context.dataoptsVal = prompt(chalk.yellowBright('Asset Data [value]: '));
 
     //helper function to return Key Pair from Passphrase
     const getKeyPairFromPassphrase = async function (passphrase) {
@@ -44,13 +42,13 @@ function createToken() {
         const derivedSeed = ed25519.derivePath("m/44'/314159'/0'", seed)
         return Stellar.Keypair.fromRawEd25519Seed(derivedSeed.key)
     }
-
     //helper function to return KeyPair from Private Key
     const getKeyPairFromSecret = async function (secret) {
         return Stellar.Keypair.fromSecret(secret)
     }
-
-    const fail = (message) => {
+    context.getIssuerKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(context.issuerAccountPass)) ? getKeyPairFromSecret : getKeyPairFromPassphrase;
+    context.getDistributorKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(context.distributorAccountPass)) ? getKeyPairFromSecret : getKeyPairFromPassphrase;
+    context.fail = (message) => {
         console.log('\n')
         console.error(chalk.red(message))
         if (message.response && message.response.data && message.response.data.extras && message.response.data.extras.result_codes && message.response.data.extras.result_codes.operations) {
@@ -65,61 +63,104 @@ function createToken() {
         }
         process.exit(1)
     }
-
-    //building transaction function
-    const transaction = async (keypair) => {
-        const customAsset = new Stellar.Asset(assetName, buyIssuerAddress);
-        const sellingAsset = (assetOffer) ? new Stellar.Asset(assetOffer, sellIssuerAddress) : Stellar.Asset.native();
-
-        const txOptions = {
-            fee: await server.fetchBaseFee(),
-            networkPassphrase: config.networkPassphrase,
+    context.success = (tn) => {
+        if (tn.successful){
+            console.log(chalk.magentaBright('Ok'))
+        }else{
+            console.log(chalk.magentaBright('\nSomething went wrong'))
         }
-        const changeTrustOpts = {
-            asset: customAsset
-        };
-        const manageBuyOfferOpts = {
-            selling: sellingAsset,
-            buying: customAsset,
-            buyAmount: assetAmount,
-            price: assetPrice
-        };
-
-        const buyerAccount = await server.loadAccount(accountAddress)
-        const transaction = new Stellar.TransactionBuilder(buyerAccount, txOptions)
-            .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
-            .addOperation(Stellar.Operation.manageBuyOffer(manageBuyOfferOpts))
-            .setTimeout(0)
-            .build();
-
-        transaction.sign(keypair)
-
-        const response = await server.submitTransaction(transaction)
-        return response
     }
 
-    var getKeyPair;
-    if (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) {
-        getKeyPair = getKeyPairFromSecret;
-    } 
-    else {
-        getKeyPair = getKeyPairFromPassphrase;
-    }
-
-    getKeyPair(accountPassphrase)
-    .then((res) => transaction(res)
-        .then((tn) => {
-            status.stop();
-            if (tn.successful){
-                console.log(chalk.yellowBright('\nBuy Offer Created'))
-            }else{
-                console.log(chalk.red('\nTransaction Failed'))
-            }
-        })
-        .catch(fail)
-    )
-    .catch((e) => {status.stop(); console.error(e); throw e})
-
+    //steps
+    createTrustline(context).then((message) => {
+        context.success(message);
+        createAsset(context).then((message) => {
+            context.success(message);
+            lockIssuer(context).then(context.success).catch(context.fail)
+        }).catch((e) => {console.log(e.response.data.extras.result_codes); process.exit(1)})
+    }).catch(context.fail)
 }
 
-module.exports = createToken
+
+async function createTrustline(context) {
+    prompt(chalk.yellowBright('Press Enter to Create Trustline...'));
+
+    //prepare options for creating trustline
+    var changeTrustOpts = {
+        asset: context.customAsset
+    };
+
+    const txOptions = {
+        fee: await context.server.fetchBaseFee(),
+        networkPassphrase: config.networkPassphrase,
+    };
+
+    const distributorKeypair = await context.getDistributorKeyPair(context.distributorAccountPass)
+    const distributorAccount = await context.server.loadAccount(context.distributorAccountAddress);
+    const transaction = new Stellar.TransactionBuilder(distributorAccount, txOptions)
+        .addOperation(Stellar.Operation.changeTrust(changeTrustOpts))
+        .setTimeout(0)
+        .build();
+    transaction.sign(distributorKeypair);
+
+    const response = await context.server.submitTransaction(transaction)
+    return response
+}
+
+async function createAsset(context) {
+    prompt(chalk.yellowBright('Press Enter to Create Asset...'));
+
+    const txOptions = {
+        fee: await context.server.fetchBaseFee(),
+        networkPassphrase: config.networkPassphrase,
+    };
+    const paymentOpts = {
+        asset: context.customAsset,
+        destination: context.distributorAccountAddress,
+        amount: context.assetAmount
+    };
+    const manageDataOpts = {
+        name: context.dataoptsName,
+        value: context.dataoptsVal,
+    };
+
+    const issuerKeypair = await context.getIssuerKeyPair(context.issuerAccountPass)
+    const issuerAccount = await context.server.loadAccount(context.issuerAccountAddress);
+    const transaction = new Stellar.TransactionBuilder(issuerAccount, txOptions)
+        .addOperation(Stellar.Operation.manageData(manageDataOpts))
+        .addOperation(Stellar.Operation.payment(paymentOpts))
+        .setTimeout(0)
+        .build();
+    transaction.sign(issuerKeypair);
+
+    const response = await context.server.submitTransaction(transaction)
+    return response
+}
+
+async function lockIssuer(context) {
+    prompt(chalk.yellowBright('Press Enter to Lock Issuer...'));
+
+    const txOptions = {
+        fee: await context.server.fetchBaseFee(),
+        networkPassphrase: config.networkPassphrase,
+    };
+    
+    const thresholds = {
+        masterWeight: 0, // issuing account private key signature counts for 0, no rights :)
+        lowThreshold: 0,
+        medThreshold: 0,
+        highThreshold: 0 // no more transaction on this account anymore !
+    };
+
+    const issuerKeypair = await context.getIssuerKeyPair(context.issuerAccountPass)
+    const issuerAccount = await context.server.loadAccount(context.issuerAccountAddress);
+    const transaction = new Stellar.TransactionBuilder(issuerAccount, txOptions)
+        .addOperation(Stellar.Operation.setOptions(thresholds))
+        .setTimeout(0)
+        .build();
+    transaction.sign(issuerKeypair);
+
+    const response = await context.server.submitTransaction(transaction)
+    return response
+}
+module.exports = main

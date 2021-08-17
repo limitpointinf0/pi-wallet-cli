@@ -7,8 +7,9 @@ const assets = require('./src/checkAssets')
 const orderbook = require('./src/checkOrderBook')
 const purchase = require('./src/purchaseAsset')
 const sell = require('./src/sellAsset')
+const creatasset = require('./src/createAsset')
 const trustline = require('./src/setTrustline')
-const create = require('./src/createAccount')
+const createacct = require('./src/createAccount')
 const set = require('./src/setAccount')
 const unset = require('./src/unsetAccount')
 const stream = require('./src/streamActivity')
@@ -60,9 +61,14 @@ program
     .action(sell)
 
 program
-    .command('create')
+    .command('createasset')
+    .description('Create an Asset')
+    .action(creatasset)
+
+program
+    .command('createacct')
     .description('Create an Account')
-    .action(create)
+    .action(createacct)
 
 program
     .command('stream')
