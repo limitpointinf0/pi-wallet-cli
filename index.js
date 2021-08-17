@@ -13,7 +13,13 @@ const createacct = require('./src/createAccount')
 const set = require('./src/setAccount')
 const unset = require('./src/unsetAccount')
 const stream = require('./src/streamActivity')
+const config = require('./src/config')
 const info = require('./src/info')
+
+program
+    .command('config')
+    .description('Set Network Configurations')
+    .action(config)
 
 program
     .command('set')

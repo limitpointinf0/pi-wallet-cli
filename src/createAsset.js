@@ -33,6 +33,7 @@ function main() {
     context.assetName = prompt(chalk.yellowBright('Asset Name: '));
     context.customAsset = new Stellar.Asset(context.assetName, context.issuerAccountAddress);
     context.assetAmount = prompt(chalk.yellowBright('Asset Amount: '));
+    context.assetInfo = prompt(chalk.yellowBright('Asset Info Domain: '));
     context.dataoptsName = prompt(chalk.yellowBright('Asset Data [name]: '));
     context.dataoptsVal = prompt(chalk.yellowBright('Asset Data [value]: '));
 
@@ -77,7 +78,7 @@ function main() {
         createAsset(context).then((message) => {
             context.success(message);
             lockIssuer(context).then(context.success).catch(context.fail)
-        }).catch((e) => {console.log(e.response.data.extras.result_codes); process.exit(1)})
+        }).catch(context.fail)
     }).catch(context.fail)
 }
 
@@ -123,10 +124,14 @@ async function createAsset(context) {
         name: context.dataoptsName,
         value: context.dataoptsVal,
     };
+    const assetInfo = {
+        homeDomain: context.assetInfo
+    }
 
     const issuerKeypair = await context.getIssuerKeyPair(context.issuerAccountPass)
     const issuerAccount = await context.server.loadAccount(context.issuerAccountAddress);
     const transaction = new Stellar.TransactionBuilder(issuerAccount, txOptions)
+        .addOperation(Stellar.Operation.setOptions(assetInfo))
         .addOperation(Stellar.Operation.manageData(manageDataOpts))
         .addOperation(Stellar.Operation.payment(paymentOpts))
         .setTimeout(0)

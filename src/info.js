@@ -4,6 +4,7 @@ const readline = require('readline');
 var path = require('path');
 var appDir = path.dirname(require.main.filename);
 var packageInfo = require('../package.json');
+const config = require('../config.json');
 const chalk = require('chalk')
 
 async function getInfo() {
@@ -17,6 +18,12 @@ async function getInfo() {
         // Each line in input.txt will be successively available here as `line`.
         console.log(chalk.magentaBright(`${line}`));
     }
+
+    console.log('\n')
+
+    console.log(chalk.yellowBright(`Current Account: ${config.my_address}`))
+    console.log(chalk.yellowBright(`Server: ${config.server}`))
+    console.log(chalk.yellowBright(`Network Passphrase: ${config.networkPassphrase}`))
 
     console.log('\n')
 
