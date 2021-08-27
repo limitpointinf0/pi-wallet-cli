@@ -1,34 +1,36 @@
-const conf = new (require('conf'))()
 const chalk = require('chalk')
 const Stellar = require('stellar-sdk')
 var StellarBase = require('stellar-base');
-const { TimeoutInfinite } = require('stellar-base');
-const bip39 = require('bip39')
-const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
+const piLib = require('./piLib');
 const prompt = require('prompt-sync')({ sigint: true });
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 function makePayment() {
 
-    console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Make Payment'))
-    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+    piLib.createBanner('Make Payment');
 
     //get source account information
     const accountAddress = (config.my_address) ? config.my_address : prompt(chalk.yellowBright('Source Account Address: '));
     const accountPassphrase = prompt(chalk.yellowBright('Source Account Passphrase/PrivateKey: '));
     //get destination account information
     const destAccountAddress = prompt(chalk.yellowBright('Destination Account Address: '));
+    //get asset to transfer
+    const assetName = prompt(chalk.yellowBright('Asset (blank for native): '));
+    const issuerAddress = prompt(chalk.yellowBright('Asset Issuer (blank for native): '));
+    //get amount to transfer
+    const transferAmt = prompt(chalk.yellowBright('Transfer Amt: '));
+    //get memo to transfer
+    const transferMemo = prompt(chalk.yellowBright('Memo (optional): '));
+    //ask confirmation
+    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
+
+    //validate
     if (!StellarBase.StrKey.isValidEd25519PublicKey(destAccountAddress)) {
         console.log(chalk.red('Not a valid destination address'))
         process.exit(1);
     }
-
-    //get asset to transfer
-    const assetName = prompt(chalk.yellowBright('Asset (blank for native): '));
-    const issuerAddress = prompt(chalk.yellowBright('Asset Issuer (blank for native): '));
     var transferAsset;
     if(assetName && issuerAddress) {
         transferAsset = new Stellar.Asset(assetName, issuerAddress);
@@ -37,14 +39,6 @@ function makePayment() {
     }else{
         transferAsset = Stellar.Asset.native();
     }
-
-    //get amount to transfer
-    const transferAmt = prompt(chalk.yellowBright('Transfer Amt: '));
-    //get memo to transfer
-    const transferMemo = prompt(chalk.yellowBright('Memo (optional): '));
-    //ask confirmation
-    prompt(chalk.yellowBright('Press Enter to Finalize and Submit...'));
-
     
     const status = new Spinner('Making transaction, please wait...');
     status.start();
@@ -52,17 +46,7 @@ function makePayment() {
     //create server object
     const server = new Stellar.Server(config.server)
 
-    //helper function to return Key Pair from Passphrase
-    const getKeyPairFromPassphrase = async function (passphrase) {
-        const seed = await bip39.mnemonicToSeed(passphrase)
-        const derivedSeed = ed25519.derivePath("m/44'/314159'/0'", seed)
-        return Stellar.Keypair.fromRawEd25519Seed(derivedSeed.key)
-    }
-    //helper function to return KeyPair from Private Key
-    const getKeyPairFromSecret = async function (secret) {
-        return Stellar.Keypair.fromSecret(secret)
-    }
-    const getKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) ? getKeyPairFromSecret : getKeyPairFromPassphrase;
+    const getKeyPair = (StellarBase.StrKey.isValidEd25519SecretSeed(accountPassphrase)) ? piLib.getKeyPairFromSecret : piLib.getKeyPairFromPassphrase;
 
     const fail = (message) => {
         console.log('\n')
@@ -107,7 +91,7 @@ function makePayment() {
         const transaction = new Stellar.TransactionBuilder(accountA, txOptions)
             .addOperation(Stellar.Operation.payment(paymentToDest))
             .addMemo(Stellar.Memo.text(transferMemo))
-            .setTimeout(TimeoutInfinite)
+            .setTimeout(StellarBase.TimeoutInfinite)
             .build()
 
         transaction.sign(keypair)
