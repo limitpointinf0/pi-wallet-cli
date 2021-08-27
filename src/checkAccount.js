@@ -1,27 +1,22 @@
-const conf = new (require('conf'))()
+const axios = require('axios');
 const chalk = require('chalk')
 const Stellar = require('stellar-sdk')
-const util = require('util')
 const prompt = require('prompt-sync')({ sigint: true });
 const config = require('../config.json');
+const piLib = require('./piLib');
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 function check () {
 
-    console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Check Account'))
-    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+    piLib.createBanner('Check Balance');
 
     const server = new Stellar.Server(config.server)
 
     //get account information
-    var accountAddress = config.my_address
-    if (!accountAddress){
-        var accountAddress = prompt(chalk.yellowBright('Account Address: '));
-    }
+    const accountAddress = (config.my_address) ? config.my_address : prompt(chalk.yellowBright('Account Address: '));
 
-    const checkAccounts = async (accountAddress) => {
+    const checkBalance = async (accountAddress) => {
 
         const account = await server.loadAccount(accountAddress);
 
@@ -35,19 +30,31 @@ function check () {
         }
 
     }
-    const status = new Spinner('Checking account, please wait...');
+
+    const checkReserve = async (accountAddress) => {
+        const reqUrl = config.server + `/accounts/${accountAddress}`;
+        const subentryCount = await axios.get(reqUrl);
+        return subentryCount;
+    }
+
+    const status = new Spinner('Checking balances, please wait...');
     status.start();
-    checkAccounts(accountAddress)
+    checkBalance(accountAddress)
         .then((account) => {
             status.stop();
             console.log('\n')
             console.log(chalk.yellowBright(`Account ID: ${account.accountId}\n`))
             account.balances.forEach((balance) => {
-                console.log(chalk.yellowBright(`Asset: ${balance.type === "native" ? "PI" : balance.asset}`))
+                console.log(chalk.yellowBright(`Asset: ${balance.type === "native" ? config.currency : balance.asset}`))
                 console.log(chalk.yellowBright(`Type: ${balance.type}`))
                 console.log(chalk.yellowBright(`Balance: ${balance.balance}`))
                 console.log('\n')
             });
+            checkReserve(accountAddress).then((res) => {
+                const subentryCount = res.data.subentry_count;
+                const reserve = config.baseReserve * ( 2 + subentryCount)
+                console.log(chalk.yellowBright(`Reserve: ${reserve}`))
+            })
         })
         .catch((e) => { 
             status.stop();
