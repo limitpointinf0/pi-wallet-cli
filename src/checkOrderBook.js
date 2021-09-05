@@ -1,14 +1,13 @@
 const conf = new (require('conf'))()
 const axios = require('axios');
 const config = require('../config.json');
+const piLib = require('./piLib');
 const prompt = require('prompt-sync')({ sigint: true });
 const chalk = require('chalk');
 
 function checkOrderBook() {
 
-    console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Check Order Book'))
-    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+    piLib.createBanner('Check Order Book');
 
     //prompt for query parameters
     var reqUrl = config.server + '/order_book?'

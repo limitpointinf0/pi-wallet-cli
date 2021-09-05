@@ -2,6 +2,8 @@ const conf = new (require('conf'))()
 const StellarSdk = require('stellar-sdk');
 const server = new StellarSdk.Server("https://api.testnet.minepi.com");
 const config = require('../config.json');
+const piLib = require('./piLib');
+const prompt = require('prompt-sync')({ sigint: true })
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
 const chalk = require('chalk')
@@ -12,9 +14,7 @@ const chalk = require('chalk')
 
 function streamPayments() {
 
-    console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Stream Activity'))
-    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+    piLib.createBanner('Stream Payments');
 
     var accountAddress = config.my_address
     if (!accountAddress){

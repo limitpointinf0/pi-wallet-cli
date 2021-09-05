@@ -6,6 +6,7 @@ const { TimeoutInfinite } = require('stellar-base');
 const bip39 = require('bip39')
 const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
+const piLib = require('./piLib');
 const prompt = require('prompt-sync')({ sigint: true });
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
@@ -13,9 +14,7 @@ const Spinner = CLI.Spinner;
 
 function sellToken() {
 
-    console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Sell Asset'))
-    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+    piLib.createBanner('Sell Asset');
 
     //get source account information
     const accountAddress = (config.my_address) ? config.my_address : prompt(chalk.yellowBright('Source Account Address: '));

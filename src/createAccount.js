@@ -6,15 +6,14 @@ const { TimeoutInfinite } = require('stellar-base');
 const bip39 = require('bip39')
 const ed25519 =  require('@hawkingnetwork/ed25519-hd-key-rn');
 const config = require('../config.json');
+const piLib = require('./piLib');
 const prompt = require('prompt-sync')({ sigint: true });
 const CLI = require('clui');
 const Spinner = CLI.Spinner;
 
 function create() {
 
-    console.log(chalk.yellowBright('-----------------------------------------------'))
-    console.log(chalk.yellowBright('Pi Wallet CLI'), chalk.magentaBright('Create Account'))
-    console.log(chalk.yellowBright('-----------------------------------------------'), '\n')
+    piLib.createBanner('Create Account');
 
     //prepare keypairs for new wallet
     const newKeypair = Stellar.Keypair.random()
