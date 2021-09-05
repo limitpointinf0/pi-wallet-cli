@@ -87,7 +87,7 @@ function create() {
             .setTimeout(TimeoutInfinite)
             .build()
         
-        transaction.sign(keypair, newKeypair)
+        transaction.sign(keypair)
 
         await server.submitTransaction(transaction)
 
