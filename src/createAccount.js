@@ -54,14 +54,16 @@ function create() {
     const fail = (message) => {
         console.log('\n')
         console.error(chalk.red(message))
-        if (message.response && message.response.data && message.response.data.extras && message.response.data.extras.result_codes && message.response.data.extras.result_codes.operations) {
+        if (message.response && message.response.data && message.response.data.extras && message.response.data.extras.result_codes && (message.response.data.extras.result_codes.operations || message.response.data.extras.result_codes.transaction)) {
             const reason = message.response.data.extras.result_codes.operations;
+            const txnreason = message.response.data.extras.result_codes.transaction;
             switch(reason) {
                 case 'op_underfunded':
                     console.log(chalk.red('reason:', 'Sender account has insufficient funds'));
                     break;
                 default:
                     console.log(chalk.red('reason:', reason))
+                    console.log(chalk.red('txn reason:', txnreason))
             }
         }
         process.exit(1)

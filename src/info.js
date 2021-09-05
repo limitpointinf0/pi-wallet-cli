@@ -24,6 +24,8 @@ async function getInfo() {
     console.log(chalk.yellowBright(`Current Account: ${config.my_address}`))
     console.log(chalk.yellowBright(`Server: ${config.server}`))
     console.log(chalk.yellowBright(`Network Passphrase: ${config.networkPassphrase}`))
+    console.log(chalk.yellowBright(`Currency: ${config.currency}`))
+    console.log(chalk.yellowBright(`Base Reserve: ${config.baseReserve}`))
 
     console.log('\n')
 
