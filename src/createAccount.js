@@ -82,13 +82,7 @@ function create() {
         }
         const accountA = await server.loadAccount(accountAddress)
         const transaction = new Stellar.TransactionBuilder(accountA, txOptions)
-            .addOperation(Stellar.Operation.beginSponsoringFutureReserves({
-                sponsoredId: newWallet.publicKey,
-            }))
             .addOperation(Stellar.Operation.createAccount(createAccountB))
-            .addOperation(Stellar.Operation.endSponsoringFutureReserves({
-                source: newWallet.publicKey,
-            }))
             .addMemo(Stellar.Memo.text('Create New Wallet'))
             .setTimeout(TimeoutInfinite)
             .build()
