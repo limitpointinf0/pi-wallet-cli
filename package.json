@@ -15,6 +15,7 @@
     "clui": "^0.3.6",
     "commander": "^8.1.0",
     "conf": "^10.0.1",
+    "ipfs-http-client": "^52.0.3",
     "prompt-sync": "^4.2.0",
     "stellar-sdk": "^8.2.4",
     "yargs": "^13.2.4"
