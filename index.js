@@ -13,6 +13,7 @@ const createacct = require('./src/createAccount')
 const set = require('./src/setAccount')
 const unset = require('./src/unsetAccount')
 const stream = require('./src/streamActivity')
+const uploadFile = require('./src/uploadIPFS')
 const config = require('./src/config')
 const info = require('./src/info')
 
@@ -81,6 +82,20 @@ program
     .description('Stream Activity')
     .action(stream)
 
+program
+    .command('upfile')
+    .option('-f, --file <file>', 'path to file')
+    .on("option:file", (file) => {
+        process.env["file"] = file;
+    })
+    .option('-o, --host <host>', 'host for file [ex. https://ipfs.infura.io:5001]')
+    .on("option:host", (host) => {
+        process.env["host"] = host;
+    })
+    .option('-p, --pin', 'pin file')
+    .description('Upload a File to IPFS')
+    .action(uploadFile)
+    
 program
     .command('info')
     .description('Info')
