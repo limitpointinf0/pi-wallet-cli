@@ -84,11 +84,11 @@ program
 
 program
     .command('upfile')
-    .option('-f, --file <file>', 'path to file')
+    .requiredOption('-f, --file <file>', 'path to file')
     .on("option:file", (file) => {
         process.env["file"] = file;
     })
-    .option('-o, --host <host>', 'host for file [ex. https://ipfs.infura.io:5001]')
+    .requiredOption('-o, --host <host>', 'host for file [ex. https://ipfs.infura.io:5001]')
     .on("option:host", (host) => {
         process.env["host"] = host;
     })
